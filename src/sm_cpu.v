@@ -26,6 +26,7 @@ module sm_cpu
     wire        aluSrc;
     wire        aluZero;
     wire [ 2:0] aluControl;
+    wire        uncondBranch; // In case of JR and others unconditional jumps
 
     //program counter
     wire [31:0] pc;
@@ -64,7 +65,7 @@ module sm_cpu
 
     //sign extension
     wire [31:0] signImm = { {16 { instr[15] }}, instr[15:0] };
-    assign pcBranch = pcNext + signImm;
+    assign pcBranch = uncondBranch ? rd1 : (pcNext + signImm);
 
     //alu
     wire [31:0] srcB = aluSrc ? signImm : rd2;
@@ -82,14 +83,15 @@ module sm_cpu
     //control
     sm_control sm_control
     (
-        .cmdOper    ( instr[31:26] ),
-        .cmdFunk    ( instr[ 5:0 ] ),
-        .aluZero    ( aluZero      ),
-        .pcSrc      ( pcSrc        ), 
-        .regDst     ( regDst       ), 
-        .regWrite   ( regWrite     ), 
-        .aluSrc     ( aluSrc       ),
-        .aluControl ( aluControl   )
+        .cmdOper      ( instr[31:26] ),
+        .cmdFunk      ( instr[ 5:0 ] ),
+        .aluZero      ( aluZero      ),
+        .pcSrc        ( pcSrc        ),
+        .regDst       ( regDst       ),
+        .regWrite     ( regWrite     ),
+        .aluSrc       ( aluSrc       ),
+        .aluControl   ( aluControl   ),
+	.uncondBranch ( uncondBranch )
     );
 
 endmodule
@@ -103,14 +105,17 @@ module sm_control
     output reg       regDst, 
     output reg       regWrite, 
     output reg       aluSrc,
-    output reg [2:0] aluControl
+    output reg [2:0] aluControl,
+    output reg       uncondBranch;
 );
     reg          branch;
+
     reg          condZero;
-    assign pcSrc = branch & (aluZero == condZero);
+    assign pcSrc = uncondBranch ? 1 : (branch & (aluZero == condZero));
 
     always @ (*) begin
         branch      = 1'b0;
+	uncondBranch = 1'b0;
         condZero    = 1'b0;
         regDst      = 1'b0;
         regWrite    = 1'b0;
@@ -125,6 +130,7 @@ module sm_control
             { `C_SPEC,  `F_SRL  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SRL;  end
             { `C_SPEC,  `F_SLTU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SLTU; end
             { `C_SPEC,  `F_SUBU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SUBU; end
+	    { `C_SPEC,  `F_JR   } : begin uncondBranch = 1'b1; end
 
             { `C_ADDIU, `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_ADD;  end
             { `C_LUI,   `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_LUI;  end

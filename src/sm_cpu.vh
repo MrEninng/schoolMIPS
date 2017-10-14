@@ -38,4 +38,6 @@
                               //         Rd = (Rs∅ < Rt∅) ? 1 : 0
 `define F_SUBU      6'b100011 // R-type, Unsigned Subtract
                               //         Rd = Rs – Rt
+`define F_JR        6'b001000 // R-type
+
 `define F_ANY       6'b??????
