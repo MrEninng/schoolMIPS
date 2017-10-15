@@ -44,10 +44,12 @@ module sm_cpu
     assign regData = (regAddr != 0) ? rd0 : pc;
 
     //register file
-    wire [ 4:0] a3  = regDst ? instr[15:11] : instr[20:16];
+    wire [ 4:0] a3;
     wire [31:0] rd1;
     wire [31:0] rd2;
     wire [31:0] wd3;
+
+    assign a3  = regDst ? instr[15:11] : instr[20:16];
 
     sm_register_file rf
     (
@@ -64,11 +66,13 @@ module sm_cpu
     );
 
     //sign extension
+    wire signExtend;
     wire [31:0] signImm = { {16 { instr[15] }}, instr[15:0] };
+    wire [31:0] zeroImm = { 16'h0, instr[15:0] };
     assign pcBranch = uncondBranch ? rd1 : (pcNext + signImm);
 
     //alu
-    wire [31:0] srcB = aluSrc ? signImm : rd2;
+    wire [31:0] srcB = aluSrc ? (signExtend ? signImm : zeroImm) : rd2;
 
     sm_alu alu
     (
@@ -91,7 +95,7 @@ module sm_cpu
         .regWrite     ( regWrite     ),
         .aluSrc       ( aluSrc       ),
         .aluControl   ( aluControl   ),
-	.uncondBranch ( uncondBranch )
+        .uncondBranch ( uncondBranch )
     );
 
 endmodule
@@ -101,26 +105,30 @@ module sm_control
     input      [5:0] cmdOper,
     input      [5:0] cmdFunk,
     input            aluZero,
-    output           pcSrc, 
+    output           pcSrc,
+    output           signExtend,
     output reg       regDst, 
     output reg       regWrite, 
     output reg       aluSrc,
     output reg [2:0] aluControl,
-    output reg       uncondBranch;
+    output reg       uncondBranch
 );
     reg          branch;
 
     reg          condZero;
+    reg          _signExtend;
+
     assign pcSrc = uncondBranch ? 1 : (branch & (aluZero == condZero));
+    assign signExtend = _signExtend;
 
     always @ (*) begin
-        branch      = 1'b0;
-	uncondBranch = 1'b0;
-        condZero    = 1'b0;
-        regDst      = 1'b0;
-        regWrite    = 1'b0;
-        aluSrc      = 1'b0;
-        aluControl  = `ALU_ADD;
+        branch       = 1'b0;
+        uncondBranch = 1'b0;
+        condZero     = 1'b0;
+        regDst       = 1'b0;
+        regWrite     = 1'b0;
+        aluSrc       = 1'b0;
+        aluControl   = `ALU_ADD;
 
         casez( {cmdOper,cmdFunk} )
             default               : ;
@@ -130,10 +138,12 @@ module sm_control
             { `C_SPEC,  `F_SRL  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SRL;  end
             { `C_SPEC,  `F_SLTU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SLTU; end
             { `C_SPEC,  `F_SUBU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SUBU; end
-	    { `C_SPEC,  `F_JR   } : begin uncondBranch = 1'b1; end
-
+            { `C_SPEC,  `F_JR   } : begin uncondBranch = 1'b1; end
+                                    //aluSrc = 1'b1 shows that need use immediate
             { `C_ADDIU, `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_ADD;  end
             { `C_LUI,   `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_LUI;  end
+                                   //regDst = 0 because we need use bits: 20:16
+            { `C_XORI,  `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; _signExtend = 1'b0; aluControl = `ALU_XOR; end
 
             { `C_BEQ,   `F_ANY  } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUBU; end
             { `C_BNE,   `F_ANY  } : begin branch = 1'b1; aluControl = `ALU_SUBU; end
@@ -160,6 +170,7 @@ module sm_alu
             `ALU_SRL  : result = srcB >> shift;
             `ALU_SLTU : result = (srcA < srcB) ? 1 : 0;
             `ALU_SUBU : result = srcA - srcB;
+            `ALU_XOR  : result = srcA ^ srcB;
         endcase
     end
 
