@@ -140,6 +140,7 @@ module sm_control
             { `C_SPEC,  `F_SUBU } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SUBU; end
             { `C_SPEC,  `F_JR   } : begin uncondBranch = 1'b1; end
             { `C_SPEC,  `F_XOR  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_XOR;  end
+            { `C_SPEC,  `F_SLL  } : begin regDst = 1'b1; regWrite = 1'b1; aluControl = `ALU_SLL;  end
 
                                     //aluSrc = 1'b1 shows that need use immediate
             { `C_ADDIU, `F_ANY  } : begin regWrite = 1'b1; aluSrc = 1'b1; aluControl = `ALU_ADD;  end
@@ -173,6 +174,7 @@ module sm_alu
             `ALU_SLTU : result = (srcA < srcB) ? 1 : 0;
             `ALU_SUBU : result = srcA - srcB;
             `ALU_XOR  : result = srcA ^ srcB;
+            `ALU_SLL  : result = (srcB << shift);
         endcase
     end
 

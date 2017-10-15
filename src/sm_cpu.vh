@@ -16,6 +16,7 @@
 `define ALU_SLTU    3'b100
 `define ALU_SUBU    3'b101
 `define ALU_XOR     3'b110
+`define ALU_SLL     3'b111
 
 //instruction operation code
 `define C_SPEC      6'b000000 // Special instructions (depends on function field)
@@ -43,5 +44,7 @@
 `define F_JR        6'b001000 // R-type
 
 `define F_XOR       6'b100110 // R-type, RD = RS xor RT
+
+`define F_SLL       6'b000000 // R-type, rd = rt << shift
 
 `define F_ANY       6'b??????
