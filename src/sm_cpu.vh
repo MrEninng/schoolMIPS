@@ -42,4 +42,6 @@
                               //         Rd = Rs – Rt
 `define F_JR        6'b001000 // R-type
 
+`define F_XOR       6'b100110 // R-type, RD = RS xor RT
+
 `define F_ANY       6'b??????
