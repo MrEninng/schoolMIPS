@@ -7,6 +7,7 @@ module sm_top
     input   [ 3:0 ] clkDevide,
     input           clkEnable,
     output          clk,
+    input   [ 7:0 ] dipValue,
     input   [ 4:0 ] regAddr,
     output  [31:0 ] regData
 );
@@ -42,7 +43,8 @@ module sm_top
         .regAddr    ( addr      ),
         .regData    ( regData   ),
         .imAddr     ( imAddr    ),
-        .imData     ( imData    )
+        .imData     ( imData    ),
+        .dipValue   ( dipValue  )
     );
 
 endmodule

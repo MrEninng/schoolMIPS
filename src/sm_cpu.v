@@ -17,7 +17,8 @@ module sm_cpu
     input   [ 4:0]  regAddr,    // debug access reg address
     output  [31:0]  regData,    // debug access reg data
     output  [31:0]  imAddr,     // instruction memory address
-    input   [31:0]  imData      // instruction memory data
+    input   [31:0]  imData,     // instruction memory data
+    input   [ 7:0]  dipValue
 );
     //control wires
     wire        pcSrc;
@@ -27,6 +28,7 @@ module sm_cpu
     wire        aluZero;
     wire [ 2:0] aluControl;
     wire        uncondBranch; // In case of JR and others unconditional jumps
+    wire loadDipReg; //Control coping value from dipValue to reg;
 
     //program counter
     wire [31:0] pc;
@@ -51,6 +53,9 @@ module sm_cpu
 
     assign a3  = regDst ? instr[15:11] : instr[20:16];
 
+
+
+
     sm_register_file rf
     (
         .clk        ( clk          ),
@@ -62,7 +67,9 @@ module sm_cpu
         .rd1        ( rd1          ),
         .rd2        ( rd2          ),
         .wd3        ( wd3          ),
-        .we3        ( regWrite     )
+        .we3        ( regWrite     ),
+        .dipValue   ( dipValue     ),
+        .loadDipReg ( loadDipReg   )
     );
 
     //sign extension
@@ -95,7 +102,8 @@ module sm_cpu
         .regWrite     ( regWrite     ),
         .aluSrc       ( aluSrc       ),
         .aluControl   ( aluControl   ),
-        .uncondBranch ( uncondBranch )
+        .uncondBranch ( uncondBranch ),
+        .loadDipReg   ( loadDipReg   )
     );
 
 endmodule
@@ -111,7 +119,8 @@ module sm_control
     output reg       regWrite, 
     output reg       aluSrc,
     output reg [2:0] aluControl,
-    output reg       uncondBranch
+    output reg       uncondBranch,
+    output reg       loadDipReg
 );
     reg          branch;
 
@@ -150,6 +159,8 @@ module sm_control
 
             { `C_BEQ,   `F_ANY  } : begin branch = 1'b1; condZero = 1'b1; aluControl = `ALU_SUBU; end
             { `C_BNE,   `F_ANY  } : begin branch = 1'b1; aluControl = `ALU_SUBU; end
+
+            { `C_SPEC,  `F_LDIP } : begin loadDipReg = 1'b1; end
         endcase
     end
 endmodule
@@ -192,14 +203,24 @@ module sm_register_file
     output [31:0] rd1,
     output [31:0] rd2,
     input  [31:0] wd3,
-    input         we3
+    input         we3,
+    input [7:0] dipValue;
+    input loadDipReg;
 );
     reg [31:0] rf [31:0];
+    reg [31:0] dipZeroExtend;
 
     assign rd0 = (a0 != 0) ? rf [a0] : 32'b0;
     assign rd1 = (a1 != 0) ? rf [a1] : 32'b0;
     assign rd2 = (a2 != 0) ? rf [a2] : 32'b0;
 
     always @ (posedge clk)
+	begin
         if(we3) rf [a3] <= wd3;
+	if(loadDipReg)
+		begin
+		dipZeroExtend = { 24'h0, dipValue}; // extension from 8bit to 32bit
+		rf [a3] <=wd3;
+		end
+	end
 endmodule
