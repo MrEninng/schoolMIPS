@@ -47,7 +47,7 @@
 
 `define F_SLL       6'b000000 // R-type, rd = rt << shift
 
-`define F_LDIP       6'b111111  // Need check value!
+`define F_LDIP      6'b111111  // Need check value!
 //LDIP INSTRUCTION DESCRIPTION
 //[31:26] - S_SPEC [25:21] ZEROS  [21:16] RT(write here) [15:0] ZEROS
 

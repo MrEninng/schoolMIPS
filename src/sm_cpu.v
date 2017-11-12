@@ -204,8 +204,8 @@ module sm_register_file
     output [31:0] rd2,
     input  [31:0] wd3,
     input         we3,
-    input [7:0] dipValue;
-    input loadDipReg;
+    input [7:0] dipValue,
+    input loadDipReg
 );
     reg [31:0] rf [31:0];
     reg [31:0] dipZeroExtend;

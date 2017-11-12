@@ -13,6 +13,9 @@ module sm_testbench;
     reg         rst_n;
     reg  [ 4:0] regAddr;
     wire [31:0] regData;
+    reg  [7:0]  dipValue;
+
+    initial dipValue = 8'b10101010;
 
     // ***** DUT start ************************
 
@@ -29,7 +32,8 @@ module sm_testbench;
         .regAddr ( regAddr ),
         .regData ( regData ),
         .imAddr  ( imAddr  ),
-        .imData  ( imData  )
+        .imData  ( imData  ),
+        .dipValue( dipValue)
     );
 
     // ***** DUT  end  ************************
@@ -98,6 +102,7 @@ module sm_testbench;
                 { `C_SPEC,  `F_SRL  } : $write ("srl   $%1d, $%1d, $%1d", cmdRd, cmdRs, cmdRt);
                 { `C_SPEC,  `F_SLTU } : $write ("sltu  $%1d, $%1d, $%1d", cmdRd, cmdRs, cmdRt);
                 { `C_SPEC,  `F_SUBU } : $write ("subu  $%1d, $%1d, $%1d", cmdRd, cmdRs, cmdRt);
+		{ `C_SPEC,  `F_LDIP } : $write ("ldip  $%ld", cmdRt);
 
                 { `C_ADDIU, `F_ANY  } : $write ("addiu $%1d, $%1d, %1d", cmdRt, cmdRs, cmdImm);
                 { `C_LUI,   `F_ANY  } : $write ("lui   $%1d, %1d",       cmdRt, cmdImm);
