@@ -54,8 +54,6 @@ module sm_cpu
     assign a3  = regDst ? instr[15:11] : instr[20:16];
 
 
-
-
     sm_register_file rf
     (
         .clk        ( clk          ),
@@ -219,8 +217,8 @@ module sm_register_file
         if(we3) rf [a3] <= wd3;
 	if(loadDipReg)
 		begin
-		dipZeroExtend = { 24'h0, dipValue}; // extension from 8bit to 32bit
-		rf [a3] <=wd3;
+		dipZeroExtend = { 24'b0, dipValue}; // extension from 8bit to 32bit
+		rf [a3] <= dipZeroExtend;
 		end
 	end
 endmodule
