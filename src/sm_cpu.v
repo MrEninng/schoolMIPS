@@ -135,6 +135,7 @@ module sm_control
         regDst       = 1'b0;
         regWrite     = 1'b0;
         aluSrc       = 1'b0;
+        loadDipReg   = 1'b0;
         aluControl   = `ALU_ADD;
 
         casez( {cmdOper,cmdFunk} )
