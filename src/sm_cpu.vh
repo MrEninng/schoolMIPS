@@ -49,6 +49,6 @@
 
 `define F_LDIP      6'b111111  // Need check value!
 //LDIP INSTRUCTION DESCRIPTION
-//[31:26] - S_SPEC [25:21] ZEROS  [21:16] RT(write here) [15:6] [5:0] F_LDIP(111111)
+//[31:26] - S_SPEC [25:21] ZEROS  [20:16] RT(write here) [15:6]ZEROS [5:0] F_LDIP(111111)
 
 `define F_ANY       6'b??????
